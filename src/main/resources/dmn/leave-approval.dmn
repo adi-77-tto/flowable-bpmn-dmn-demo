@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:flowable="http://flowable.org/dmn"
+             id="leaveApprovalDefinitions"
+             name="Leave Approval Rules"
+             namespace="http://flowable.org/dmn">
+
+    <decision id="leaveApprovalRules" name="Leave Approval Rules">
+        <decisionTable id="leaveApprovalDecisionTable" hitPolicy="FIRST">
+
+
+            <input id="input_days" label="Leave Days">
+                <inputExpression id="inputExpression_days" typeRef="number">
+                    <text>days</text>
+                </inputExpression>
+            </input>
+
+
+            <output id="output_needsHrApproval" label="Needs HR Approval"
+                    name="needsHrApproval" typeRef="boolean"/>
+
+            <rule id="rule_1">
+                <inputEntry id="inputEntry_1">
+                    <text>&lt;= 2</text>
+                </inputEntry>
+                <outputEntry id="outputEntry_1">
+                    <text>false</text>
+                </outputEntry>
+            </rule>
+
+            <rule id="rule_2">
+                <inputEntry id="inputEntry_2">
+                    <text>&gt; 2</text>
+                </inputEntry>
+                <outputEntry id="outputEntry_2">
+                    <text>true</text>
+                </outputEntry>
+            </rule>
+
+        </decisionTable>
+    </decision>
+</definitions>

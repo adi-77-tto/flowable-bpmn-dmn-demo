@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+             xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+             targetNamespace="http://flowable.org/leave"
+             xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL http://www.omg.org/spec/BPMN/2.0/20100524/BPMN20.xsd">
+
+    <process id="leaveRequest" name="Leave Request" isExecutable="true">
+
+        <startEvent id="start"/>
+        <sequenceFlow id="f1" sourceRef="start" targetRef="decideLeave"/>
+
+        <serviceTask id="decideLeave" name="Decide Leave Path" flowable:type="dmn">
+            <extensionElements>
+                <flowable:field name="decisionTableReferenceKey">
+                    <flowable:string><![CDATA[leaveApprovalRules]]></flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </serviceTask>
+
+        <sequenceFlow id="f2" sourceRef="decideLeave" targetRef="routeDecision"/>
+
+        <exclusiveGateway id="routeDecision" default="f3"/>
+
+        <sequenceFlow id="f3" sourceRef="routeDecision" targetRef="managerApproval"/>
+
+        <sequenceFlow id="f4" sourceRef="routeDecision" targetRef="hrApproval">
+            <conditionExpression xsi:type="tFormalExpression">${needsHrApproval == true}</conditionExpression>
+        </sequenceFlow>
+
+        <userTask id="managerApproval" name="Manager Approval"
+                  flowable:candidateGroups="managers"/>
+
+        <userTask id="hrApproval" name="HR Approval"
+                  flowable:candidateGroups="hrs"/>
+
+        <sequenceFlow id="f8" sourceRef="managerApproval" targetRef="approvalDecision"/>
+        <sequenceFlow id="f9" sourceRef="hrApproval" targetRef="approvalDecision"/>
+
+        <exclusiveGateway id="approvalDecision" default="f11"/>
+
+        <sequenceFlow id="f10" sourceRef="approvalDecision" targetRef="approvedTask">
+            <conditionExpression xsi:type="tFormalExpression">${approved == true}</conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="f11" sourceRef="approvalDecision" targetRef="rejectTask"/>
+
+
+        <serviceTask id="approvedTask" name="Send Approval Mail"
+                     flowable:class="com.example.demo_flowable.delegate.SendMailDelegate"/>
+        <sequenceFlow id="f5" sourceRef="approvedTask" targetRef="approvedEnd"/>
+
+        <serviceTask id="rejectTask" name="Reject Approval Mail"
+                     flowable:class="com.example.demo_flowable.delegate.RejectMailDelegate"/>
+        <sequenceFlow id="f6" sourceRef="rejectTask" targetRef="rejectedEnd"/>
+
+        <endEvent id="approvedEnd"/>
+        <endEvent id="rejectedEnd"/>
+    </process>
+
+    <!-- BPMN Diagram Information -->
+    <bpmndi:BPMNDiagram id="BPMNDiagram_leaveRequest">
+        <bpmndi:BPMNPlane id="BPMNPlane_leaveRequest"
+                          bpmnElement="leaveRequest">
+
+            <!-- Start Event -->
+            <bpmndi:BPMNShape id="start_di" bpmnElement="start">
+                <dc:Bounds x="80" y="240" width="36" height="36"/>
+            </bpmndi:BPMNShape>
+
+            <!-- DMN Decision Task -->
+            <bpmndi:BPMNShape id="decideLeavePath_di"
+                              bpmnElement="decideLeavePath">
+                <dc:Bounds x="160" y="218" width="150" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- Route Gateway -->
+            <bpmndi:BPMNShape id="routeDecision_di"
+                              bpmnElement="routeDecision">
+                <dc:Bounds x="380" y="233" width="50" height="50"/>
+            </bpmndi:BPMNShape>
+
+            <!-- Manager Approval -->
+            <bpmndi:BPMNShape id="managerApproval_di"
+                              bpmnElement="managerApproval">
+                <dc:Bounds x="510" y="100" width="140" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- HR Approval -->
+            <bpmndi:BPMNShape id="hrApproval_di"
+                              bpmnElement="hrApproval">
+                <dc:Bounds x="510" y="340" width="140" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- Approval Gateway -->
+            <bpmndi:BPMNShape id="approvalDecision_di"
+                              bpmnElement="approvalDecision">
+                <dc:Bounds x="740" y="233" width="50" height="50"/>
+            </bpmndi:BPMNShape>
+
+            <!-- Approved Task -->
+            <bpmndi:BPMNShape id="approvedTask_di"
+                              bpmnElement="approvedTask">
+                <dc:Bounds x="900" y="100" width="150" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- Rejected Task -->
+            <bpmndi:BPMNShape id="rejectTask_di"
+                              bpmnElement="rejectTask">
+                <dc:Bounds x="900" y="340" width="150" height="80"/>
+            </bpmndi:BPMNShape>
+
+            <!-- Approved End -->
+            <bpmndi:BPMNShape id="approvedEnd_di"
+                              bpmnElement="approvedEnd">
+                <dc:Bounds x="1150" y="122" width="36" height="36"/>
+            </bpmndi:BPMNShape>
+
+            <!-- Rejected End -->
+            <bpmndi:BPMNShape id="rejectedEnd_di"
+                              bpmnElement="rejectedEnd">
+                <dc:Bounds x="1150" y="362" width="36" height="36"/>
+            </bpmndi:BPMNShape>
+
+            <!-- Start to DMN -->
+            <bpmndi:BPMNEdge id="f1_di" bpmnElement="f1">
+                <di:waypoint x="116" y="258"/>
+                <di:waypoint x="160" y="258"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- DMN to Route Gateway -->
+            <bpmndi:BPMNEdge id="f2_di" bpmnElement="f2">
+                <di:waypoint x="310" y="258"/>
+                <di:waypoint x="380" y="258"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- Route to Manager -->
+            <bpmndi:BPMNEdge id="f3_di" bpmnElement="f3">
+                <di:waypoint x="405" y="233"/>
+                <di:waypoint x="405" y="140"/>
+                <di:waypoint x="510" y="140"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- Route to HR -->
+            <bpmndi:BPMNEdge id="f4_di" bpmnElement="f4">
+                <di:waypoint x="405" y="283"/>
+                <di:waypoint x="405" y="380"/>
+                <di:waypoint x="510" y="380"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- Manager to Approval Gateway -->
+            <bpmndi:BPMNEdge id="f8_di" bpmnElement="f8">
+                <di:waypoint x="650" y="140"/>
+                <di:waypoint x="700" y="140"/>
+                <di:waypoint x="700" y="258"/>
+                <di:waypoint x="740" y="258"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- HR to Approval Gateway -->
+            <bpmndi:BPMNEdge id="f9_di" bpmnElement="f9">
+                <di:waypoint x="650" y="380"/>
+                <di:waypoint x="700" y="380"/>
+                <di:waypoint x="700" y="258"/>
+                <di:waypoint x="740" y="258"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- Approval Gateway to Approved -->
+            <bpmndi:BPMNEdge id="f10_di" bpmnElement="f10">
+                <di:waypoint x="765" y="233"/>
+                <di:waypoint x="765" y="140"/>
+                <di:waypoint x="900" y="140"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- Approval Gateway to Rejected -->
+            <bpmndi:BPMNEdge id="f11_di" bpmnElement="f11">
+                <di:waypoint x="765" y="283"/>
+                <di:waypoint x="765" y="380"/>
+                <di:waypoint x="900" y="380"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- Approved to End -->
+            <bpmndi:BPMNEdge id="f5_di" bpmnElement="f5">
+                <di:waypoint x="1050" y="140"/>
+                <di:waypoint x="1150" y="140"/>
+            </bpmndi:BPMNEdge>
+
+            <!-- Rejected to End -->
+            <bpmndi:BPMNEdge id="f6_di" bpmnElement="f6">
+                <di:waypoint x="1050" y="380"/>
+                <di:waypoint x="1150" y="380"/>
+            </bpmndi:BPMNEdge>
+
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+
+</definitions>
